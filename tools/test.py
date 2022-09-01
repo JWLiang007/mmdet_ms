@@ -109,6 +109,9 @@ def parse_args():
         '--gen_psd_label',action='store_true',help='test on training set and generate pseudo labels'
     )
     parser.add_argument(
+        '--psd_mode',type=str,default='test',help='generate pseudo labels on train/test set'
+    )
+    parser.add_argument(
         '--score_thr',type=float,default=0.3,help='score threshold for confidence of predicted bounding box'
     )
     parser.add_argument(
@@ -193,6 +196,11 @@ def main():
     else:
         distributed = True
         init_dist(args.launcher, **cfg.dist_params)
+
+    if args.gen_psd_label:
+        if args.psd_mode == 'train':
+            cfg.data.test.ann_file = cfg.data.train.ann_file
+            cfg.data.val.ann_file = cfg.data.train.ann_file
 
     test_dataloader_default_args = dict(
         samples_per_gpu=1, workers_per_gpu=2, dist=distributed, shuffle=False)
