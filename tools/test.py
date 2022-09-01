@@ -115,6 +115,9 @@ def parse_args():
         '--score_thr',type=float,default=0.3,help='score threshold for confidence of predicted bounding box'
     )
     parser.add_argument(
+        '--with_score',action='store_true',help='store confidence scores in pseudo labels'
+    )
+    parser.add_argument(
         '--json_name',type=str,default=None,help='json file that stores pseudo labels'
     )
     args = parser.parse_args()
@@ -275,7 +278,7 @@ def main():
             result_f = dataset.result2jsonF(outputs)
             # TODO use offficial transformation
             test_ann_file = cfg.data.test.ann_file
-            label_json = res2lb(result_f,json.load(open(test_ann_file,'r')),score_thr=args.score_thr)
+            label_json = res2lb(result_f,json.load(open(test_ann_file,'r')),score_thr=args.score_thr,with_score=args.with_score)
             json_str = json.dumps(label_json)
 
             label_out = test_ann_file.replace(test_ann_file.split('/')[-1],args.json_name)

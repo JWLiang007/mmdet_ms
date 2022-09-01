@@ -1,6 +1,6 @@
 import json
 
-def res2lb(res,ori_lb,score_thr):
+def res2lb(res,ori_lb,score_thr,with_score=False):
     psd_ann = []
     img_id_list = []
     ann_id  = 0
@@ -15,6 +15,8 @@ def res2lb(res,ori_lb,score_thr):
             annotation["iscrowd"] = 0
             annotation["area"] =annotation["bbox"][2] * annotation["bbox"][3]
             annotation["ignore"] = 0
+            if with_score:
+                annotation['score'] = ann['score']
             psd_ann.append(annotation)
             ann_id+=1
 
