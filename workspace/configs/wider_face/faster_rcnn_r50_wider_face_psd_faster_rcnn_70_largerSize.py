@@ -57,14 +57,15 @@ data_root = 'dataset/WIDERFace/'
 data = dict(
     train=dict(
         ann_file=data_root + 'psd_faster_rcnn_r50_train_70.json',
-        pipeline=train_pipeline
+        pipeline=train_pipeline,
     ),
     val=dict(
         ann_file=data_root + 'psd_faster_rcnn_r50_test_70.json',
+        pipeline=test_pipeline,
     ),
     test=dict(
         ann_file=data_root + 'psd_faster_rcnn_r50_test_70.json',
-        pipeline=test_pipeline
+        pipeline=test_pipeline,
     )
 )
 # batch size factor
