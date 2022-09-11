@@ -35,4 +35,4 @@ data = dict(
     )
 )
 
-auto_scale_lr = dict(enable=True)
+auto_scale_lr = dict(enable=True, base_batch_size=16)

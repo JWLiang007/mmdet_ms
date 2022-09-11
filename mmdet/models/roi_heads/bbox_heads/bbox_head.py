@@ -265,9 +265,13 @@ class BBoxHead(BaseModule):
             label_weights = torch.cat(label_weights, 0)
             bbox_targets = torch.cat(bbox_targets, 0)
             bbox_weights = torch.cat(bbox_weights, 0)
-            scores = torch.cat(scores, 0)
+            if 'scores' in kwargs.keys():
+                scores = torch.cat(scores, 0)
 
-        return labels, label_weights, bbox_targets, bbox_weights,scores
+        if 'scores' in kwargs.keys():
+            return labels, label_weights, bbox_targets, bbox_weights,scores
+        else:
+            return labels, label_weights, bbox_targets, bbox_weights,
 
     @force_fp32(apply_to=('cls_score', 'bbox_pred'))
     def loss(self,
