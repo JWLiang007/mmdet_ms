@@ -12,7 +12,7 @@ dataset_type = 'CocoDataset'
 data_root = 'dataset/project/'
 
 data = dict(
-    samples_per_gpu=2,
+    samples_per_gpu=1,
     workers_per_gpu=2,
 
     train=dict(
