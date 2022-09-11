@@ -16,7 +16,8 @@ def cross_entropy(pred,
                   avg_factor=None,
                   class_weight=None,
                   ignore_index=-100,
-                  avg_non_ignore=False):
+                  avg_non_ignore=False,
+                  **kwargs):
     """Calculate the CrossEntropy loss.
 
     Args:
@@ -39,12 +40,21 @@ def cross_entropy(pred,
     # The default value of ignore_index is the same as F.cross_entropy
     ignore_index = -100 if ignore_index is None else ignore_index
     # element-wise losses
-    loss = F.cross_entropy(
-        pred,
-        label,
-        weight=class_weight,
-        reduction='none',
-        ignore_index=ignore_index)
+    if 'scores' in kwargs.keys():
+        loss = F.cross_entropy(
+            pred,
+            kwargs['scores'].detach().cuda(),
+            weight=class_weight,
+            reduction='none',
+            ignore_index=ignore_index,
+            )
+    else:
+        loss = F.cross_entropy(
+            pred,
+            label,
+            weight=class_weight,
+            reduction='none',
+            ignore_index=ignore_index)
 
     # average loss over non-ignored elements
     # pytorch's official cross_entropy average loss over non-ignored elements

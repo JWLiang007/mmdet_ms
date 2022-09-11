@@ -185,6 +185,8 @@ class MaxIoUAssigner(BaseAssigner):
 
         # 3. assign positive: above positive IoU threshold
         pos_inds = max_overlaps >= self.pos_iou_thr
+        # argmax_overlaps record gt idx for each prediction
+        # adding 1 for torch.nonzero filter as below
         assigned_gt_inds[pos_inds] = argmax_overlaps[pos_inds] + 1
 
         if self.match_low_quality:

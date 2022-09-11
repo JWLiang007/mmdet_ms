@@ -191,7 +191,8 @@ class BBoxHead(BaseModule):
                     gt_bboxes,
                     gt_labels,
                     rcnn_train_cfg,
-                    concat=True):
+                    concat=True,
+                    **kwargs):
         """Calculate the ground truth for all samples in a batch according to
         the sampling_results.
 
@@ -245,13 +246,28 @@ class BBoxHead(BaseModule):
             pos_gt_bboxes_list,
             pos_gt_labels_list,
             cfg=rcnn_train_cfg)
+        if 'scores' in kwargs.keys():
+            score_labels = kwargs['scores']
+            scores = []
+            for i in range(len(sampling_results)):
+                score = torch.zeros([rcnn_train_cfg['sampler']['num'],self.num_classes+1])
+                score[:,-1] = 1.0
+                gt_inds = sampling_results[i].pos_assigned_gt_inds
+                cls_inds = sampling_results[i].pos_gt_labels
+                for j in range(gt_inds.shape[0]):
+                    score[j] = torch.zeros([self.num_classes+1])
+                    score[j][cls_inds[j]] = score_labels[i][gt_inds[j]]
+                    # score[j][cls_inds[j]] = 1.0
+                scores.append(score)
 
         if concat:
             labels = torch.cat(labels, 0)
             label_weights = torch.cat(label_weights, 0)
             bbox_targets = torch.cat(bbox_targets, 0)
             bbox_weights = torch.cat(bbox_weights, 0)
-        return labels, label_weights, bbox_targets, bbox_weights
+            scores = torch.cat(scores, 0)
+
+        return labels, label_weights, bbox_targets, bbox_weights,scores
 
     @force_fp32(apply_to=('cls_score', 'bbox_pred'))
     def loss(self,
@@ -262,17 +278,27 @@ class BBoxHead(BaseModule):
              label_weights,
              bbox_targets,
              bbox_weights,
-             reduction_override=None):
+             reduction_override=None,
+             **kwargs):
         losses = dict()
         if cls_score is not None:
             avg_factor = max(torch.sum(label_weights > 0).float().item(), 1.)
             if cls_score.numel() > 0:
-                loss_cls_ = self.loss_cls(
-                    cls_score,
-                    labels,
-                    label_weights,
-                    avg_factor=avg_factor,
-                    reduction_override=reduction_override)
+                if 'scores' in kwargs.keys():
+                    loss_cls_ = self.loss_cls(
+                        cls_score,
+                        labels,
+                        label_weights,
+                        avg_factor=avg_factor,
+                        reduction_override=reduction_override,
+                        scores=kwargs['scores'])
+                else:
+                    loss_cls_ = self.loss_cls(
+                        cls_score,
+                        labels,
+                        label_weights,
+                        avg_factor=avg_factor,
+                        reduction_override=reduction_override)
                 if isinstance(loss_cls_, dict):
                     losses.update(loss_cls_)
                 else:

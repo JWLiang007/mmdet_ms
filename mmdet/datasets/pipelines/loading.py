@@ -285,6 +285,8 @@ class LoadAnnotations:
         """
 
         results['gt_labels'] = results['ann_info']['labels'].copy()
+        if 'scores' in  results['ann_info'].keys():
+            results['scores'] = results['ann_info']['scores'].copy()
         return results
 
     def _poly2mask(self, mask_ann, img_h, img_w):

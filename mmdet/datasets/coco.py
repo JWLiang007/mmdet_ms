@@ -158,6 +158,7 @@ class CocoDataset(CustomDataset):
         gt_labels = []
         gt_bboxes_ignore = []
         gt_masks_ann = []
+        scores = []
         for i, ann in enumerate(ann_info):
             if ann.get('ignore', False):
                 continue
@@ -176,7 +177,12 @@ class CocoDataset(CustomDataset):
             else:
                 gt_bboxes.append(bbox)
                 gt_labels.append(self.cat2label[ann['category_id']])
+                if ann.get('score',None):
+                    scores.append(ann['score'])
                 gt_masks_ann.append(ann.get('segmentation', None))
+
+        if scores:
+            scores = np.array(scores, dtype=np.float32)
 
         if gt_bboxes:
             gt_bboxes = np.array(gt_bboxes, dtype=np.float32)
@@ -197,7 +203,8 @@ class CocoDataset(CustomDataset):
             labels=gt_labels,
             bboxes_ignore=gt_bboxes_ignore,
             masks=gt_masks_ann,
-            seg_map=seg_map)
+            seg_map=seg_map,
+            scores = scores)
 
         return ann
 
