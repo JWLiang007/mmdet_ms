@@ -3,11 +3,11 @@ _base_ = './faster_rcnn_r50_fpn_1x_coco.py'
 model = dict(
     roi_head=dict(
         bbox_head=dict(
-            num_classes=14
+            num_classes=18
         )),
 
 )
-CLASSES = ('person bev', 'car bev', 'van bev', 'truck bev','bus bev','person', 'car','aeroplane','bus', 'train' , 'truck',  'boat', 'bird',   'camouflage man')
+CLASSES = ('CG','CVN','DDG','LCS','LHA', 'LHD','B52', 'F16', 'F22','F35', 'P8A','RQ4' , 'person','car','bus','train', 'truck','camouflage man')
 dataset_type = 'CocoDataset'
 data_root = 'dataset/project/'
 

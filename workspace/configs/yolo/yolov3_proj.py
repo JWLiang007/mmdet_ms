@@ -2,7 +2,7 @@ _base_ = './yolov3_d53_mstrain-608_273e_coco.py'
 # model settings
 model = dict(
     bbox_head=dict(
-        num_classes=14,
+        num_classes=18,
     )
 )
 # dataset settings
@@ -30,7 +30,7 @@ train_pipeline = [
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
 ]
 
-CLASSES = ('person bev', 'car bev', 'van bev', 'truck bev','bus bev','person', 'car','aeroplane','bus', 'train' , 'truck',  'boat', 'bird',   'camouflage man')
+CLASSES = ('CG','CVN','DDG','LCS','LHA', 'LHD','B52', 'F16', 'F22','F35', 'P8A','RQ4' , 'person','car','bus','train', 'truck','camouflage man')
 data = dict(
     samples_per_gpu=8,
     workers_per_gpu=4,
