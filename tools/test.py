@@ -202,8 +202,12 @@ def main():
 
     if args.gen_psd_label:
         if args.psd_mode == 'train':
-            cfg.data.test.ann_file = cfg.data.train.ann_file
-            cfg.data.val.ann_file = cfg.data.train.ann_file
+            if cfg.data.train.get('ann_file',False):
+                cfg.data.test.ann_file = cfg.data.train.ann_file
+                cfg.data.val.ann_file = cfg.data.train.ann_file
+            elif cfg.data.train.dataset.get('ann_file',False):
+                cfg.data.test.ann_file = cfg.data.train.dataset.ann_file
+                cfg.data.val.ann_file = cfg.data.train.dataset.ann_file
 
     test_dataloader_default_args = dict(
         samples_per_gpu=1, workers_per_gpu=2, dist=distributed, shuffle=False)
