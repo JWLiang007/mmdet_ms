@@ -32,7 +32,10 @@ def res2lb(res,ori_lb,score_thr,with_score=False,with_largest = False):
             if img_id not in img_id_list:
                 ann_list = sorted(img2psd[img_id],key=lambda x:x['score'],reverse=True)
                 img_id_list.append(img_id)
-                psd_ann.append(ann_list[0])
+                ann  = ann_list[0]
+                ann['id'] = ann_id
+                ann_id+=1
+                psd_ann.append(ann)
             
     psd_coco = dict()
     psd_coco['images'] =[img for img in ori_lb['images'] if img['id'] in img_id_list]
