@@ -118,6 +118,9 @@ def parse_args():
         '--with_score',action='store_true',help='store confidence scores in pseudo labels'
     )
     parser.add_argument(
+        '--with_largest',action='store_true',help='store label with largest score if scores of all pseudo labels are lower than thr'
+    )
+    parser.add_argument(
         '--json_name',type=str,default=None,help='json file that stores pseudo labels'
     )
     args = parser.parse_args()
@@ -282,7 +285,7 @@ def main():
             result_f = dataset.result2jsonF(outputs)
             # TODO use offficial transformation
             test_ann_file = cfg.data.test.ann_file
-            label_json = res2lb(result_f,json.load(open(test_ann_file,'r')),score_thr=args.score_thr,with_score=args.with_score)
+            label_json = res2lb(result_f,json.load(open(test_ann_file,'r')),score_thr=args.score_thr,with_score=args.with_score,with_largest=args.with_largest )
             json_str = json.dumps(label_json)
 
             label_out = test_ann_file.replace(test_ann_file.split('/')[-1],args.json_name)
