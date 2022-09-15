@@ -1,6 +1,6 @@
 import json
 
-def res2lb(res,ori_lb,score_thr,with_score=False,with_largest = False):
+def res2lb(res,ori_lb,score_thr,with_score=False,with_largest = False, with_gt = False):
     psd_ann = []
     img_id_list = []
     img2psd = {}
@@ -36,10 +36,19 @@ def res2lb(res,ori_lb,score_thr,with_score=False,with_largest = False):
                 ann['id'] = ann_id
                 ann_id+=1
                 psd_ann.append(ann)
+    if with_gt:
+        for img_id in img2psd.keys():
+            if img_id not in img_id_list:
+                img_id_list.append(img_id)
+                ann_list = ori_lb.imgToAnns[img_id]
+                for ann in ann_list:
+                    ann['id'] = ann_id
+                    ann_id+=1
+                    psd_ann.append(ann)
             
     psd_coco = dict()
-    psd_coco['images'] =[img for img in ori_lb['images'] if img['id'] in img_id_list]
-    psd_coco['categories'] = ori_lb['categories']
+    psd_coco['images'] =[img for img in ori_lb.dataset['images'] if img['id'] in img_id_list]
+    psd_coco['categories'] = ori_lb.dataset['categories']
     psd_coco['annotations'] = psd_ann
     return psd_coco
 
