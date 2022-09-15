@@ -36,4 +36,3 @@ data = dict(
 )
 
 auto_scale_lr = dict(enable=True, base_batch_size=16)
-load_from = 'checkpoints/faster_rcnn_r50_fpn_1x_coco_20200130-047c8118.pth'
