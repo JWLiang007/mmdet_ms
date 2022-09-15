@@ -18,18 +18,18 @@ data = dict(
     train=dict(
         classes = CLASSES,
         img_prefix=data_root + 'images',
-        ann_file=data_root+'labels/psd_fr50_train_70.json',
+        ann_file=data_root+'labels/psd_fr50_train_70_full.json',
         # separate_eval=False,
     ),
     val=dict(
         classes=CLASSES,
-        ann_file=data_root+'labels/psd_fr50_test_70.json',
+        ann_file=data_root+'labels/psd_fr50_test_70_full.json',
         img_prefix=data_root + 'images',
 
     ),
     test=dict(
         classes = CLASSES,
-        ann_file=data_root+'labels/psd_fr50_test_70.json',
+        ann_file=data_root+'labels/psd_fr50_test_70_full.json',
         img_prefix=data_root + 'images',
 
     )
