@@ -57,3 +57,8 @@ data = dict(
 # USER SHOULD NOT CHANGE ITS VALUES.
 # base_batch_size = (8 GPUs) x (8 samples per GPU)
 auto_scale_lr = dict(enable=True,base_batch_size=64)
+
+lr_config = dict(
+    step=[109, 123])
+# runtime settings
+runner = dict(type='EpochBasedRunner', max_epochs=135)
