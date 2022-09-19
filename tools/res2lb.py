@@ -1,5 +1,5 @@
 import json
-
+import random
 def res2lb(res,ori_lb,score_thr,with_score=False,with_largest = False, with_gt = False):
     psd_ann = []
     img_id_list = []
@@ -43,6 +43,7 @@ def res2lb(res,ori_lb,score_thr,with_score=False,with_largest = False, with_gt =
                 ann_list = ori_lb.imgToAnns[img_id]
                 for ann in ann_list:
                     ann['id'] = ann_id
+                    ann['score']=0.3+(score_thr-0.3)*random.random()
                     ann_id+=1
                     psd_ann.append(ann)
             

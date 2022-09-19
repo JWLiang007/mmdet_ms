@@ -121,6 +121,7 @@ workspace/work_dirs
 workspace/dataset/
 workspace/run.sh
 workspace/nohup.out
+workspace/tools
 
 # Pytorch
 *.pth
