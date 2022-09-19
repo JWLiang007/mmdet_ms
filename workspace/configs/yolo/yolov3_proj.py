@@ -59,6 +59,6 @@ data = dict(
 auto_scale_lr = dict(enable=True,base_batch_size=64)
 
 lr_config = dict(
-    step=[109, 123])
+    step=[54, 61])
 # runtime settings
-runner = dict(type='EpochBasedRunner', max_epochs=135)
+runner = dict(type='EpochBasedRunner', max_epochs=67)
