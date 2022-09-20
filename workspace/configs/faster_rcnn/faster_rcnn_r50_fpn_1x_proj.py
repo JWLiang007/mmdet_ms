@@ -18,7 +18,7 @@ data = dict(
     train=dict(
         classes = CLASSES,
         img_prefix=data_root + 'images',
-        ann_file=data_root+'labels/val_all.json',
+        ann_file=data_root+'labels/train_all.json',
         # separate_eval=False,
     ),
     val=dict(
