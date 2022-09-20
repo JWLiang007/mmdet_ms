@@ -3,11 +3,11 @@ _base_ = './faster_rcnn_r50_fpn_1x_coco.py'
 model = dict(
     roi_head=dict(
         bbox_head=dict(
-            num_classes=18
+            num_classes=14
         )),
 
 )
-CLASSES = ('CG','CVN','DDG','LCS','LHA', 'LHD','B52', 'F16', 'F22','F35', 'P8A','RQ4' , 'person','car','bus','train', 'truck','camouflage man')
+CLASSES = ('person','car','bus','train','truck','camouflage man', 'cruiser/destroyer', 'littoral combat ship','landing helicopte ship','aircraft carrier','fighter', 'patrol aircraft','uav', 'bomber' )
 dataset_type = 'CocoDataset'
 data_root = 'dataset/project/'
 
@@ -18,7 +18,7 @@ data = dict(
     train=dict(
         classes = CLASSES,
         img_prefix=data_root + 'images',
-        ann_file=data_root+'labels/train_all.json',
+        ann_file=data_root+'labels/val_all.json',
         # separate_eval=False,
     ),
     val=dict(

@@ -2,11 +2,12 @@ _base_ = 'ssd512_coco.py'
 input_size = 512
 model = dict(
     bbox_head=dict(
-        num_classes=18,))
+        num_classes=14,))
 # dataset settings
 dataset_type = 'CocoDataset'
 data_root = 'dataset/project/'
-CLASSES = ('CG','CVN','DDG','LCS','LHA', 'LHD','B52', 'F16', 'F22','F35', 'P8A','RQ4' , 'person','car','bus','train', 'truck','camouflage man')
+CLASSES = ('person','car','bus','train','truck','camouflage man', 'cruiser/destroyer', 'littoral combat ship','landing helicopte ship','aircraft carrier','fighter', 'patrol aircraft','uav', 'bomber' )
+
 img_norm_cfg = dict(mean=[123.675, 116.28, 103.53], std=[1, 1, 1], to_rgb=True)
 train_pipeline = [
     dict(type='LoadImageFromFile'),
