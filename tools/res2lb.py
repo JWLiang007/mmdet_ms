@@ -1,6 +1,6 @@
 import json
 import random
-def res2lb(res,ori_lb,score_thr,with_score=False,with_largest = False, with_gt = False):
+def res2lb(res,ori_lb,score_thr,max_num = None,with_score=False,with_largest = False, with_gt = False):
     psd_ann = []
     img_id_list = []
     img2psd = {}
@@ -27,6 +27,11 @@ def res2lb(res,ori_lb,score_thr,with_score=False,with_largest = False, with_gt =
             ann_id+=1
             if ann['image_id'] not in img_id_list:
                 img_id_list.append(ann['image_id'])
+    if max_num is not None:
+        random.shuffle(img_id_list)
+        if len(img_id_list) > max_num:
+            img_id_list = img_id_list[:max_num]
+        psd_ann = [ann for ann in psd_ann if ann['image_id'] in img_id_list]
     if with_largest:
         for img_id in img2psd.keys():
             if img_id not in img_id_list:

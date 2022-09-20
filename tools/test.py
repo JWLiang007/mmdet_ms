@@ -117,6 +117,9 @@ def parse_args():
         '--score_thr',type=float,default=0.3,help='score threshold for confidence of predicted bounding box'
     )
     parser.add_argument(
+        '--max_num',type=int,default=None,help='max num of imgs with psd labels'
+    )
+    parser.add_argument(
         '--with_score',action='store_true',help='store confidence scores in pseudo labels'
     )
     parser.add_argument(
@@ -294,7 +297,8 @@ def main():
                 score_thr=args.score_thr,\
                 with_score=args.with_score,\
                 with_largest=args.with_largest,\
-                with_gt=args.with_gt )
+                with_gt=args.with_gt,
+                max_num = args.max_num )
             # label_json = res2lb(result_f,json.load(open(test_ann_file,'r')),score_thr=args.score_thr,with_score=args.with_score,with_largest=args.with_largest )
             json_str = json.dumps(label_json)
 
