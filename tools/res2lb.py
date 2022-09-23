@@ -29,8 +29,9 @@ def res2lb(res,ori_lb,score_thr,max_num = None,with_score=False,with_largest = F
                 img_id_list.append(ann['image_id'])
     if max_num is not None:
         random.shuffle(img_id_list)
-        if len(img_id_list) > max_num:
-            img_id_list = img_id_list[:max_num]
+        if len(img_id_list) < max_num:
+            max_num = len(img_id_list)
+        img_id_list = img_id_list[:max_num]
         psd_ann = [ann for ann in psd_ann if ann['image_id'] in img_id_list]
     if with_largest:
         for img_id in img2psd.keys():
