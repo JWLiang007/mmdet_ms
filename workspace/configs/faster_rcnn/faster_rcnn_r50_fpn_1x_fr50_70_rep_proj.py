@@ -17,13 +17,13 @@ train_pipeline = [
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
 ]
 
-adv_train = dict(
-    type=dataset_type,
-    classes = CLASSES,
-    img_prefix=data_root + 'ssd512_8_5',
-    ann_file=data_root+'labels/psd_fr50_ssd512_adv_8_5_train_70.json',
-    pipeline=train_pipeline
-)
+# adv_train = dict(
+#     type=dataset_type,
+#     classes = CLASSES,
+#     img_prefix=data_root + 'ssd512_8_5',
+#     ann_file=data_root+'labels/psd_fr50_ssd512_adv_8_5_train_70.json',
+#     pipeline=train_pipeline
+# )
 ori_train = dict(
     type=dataset_type,
     classes = CLASSES,
@@ -34,10 +34,11 @@ ori_train = dict(
 
 data = dict(
 
-    train = [
-        ori_train,
-        adv_train,
-    ],
+    train = dict(
+        _delete_=True,
+        type='RepeatDataset',
+        times=2,
+        dataset=ori_train),
     val=dict(
 
         ann_file=data_root+'labels/psd_fr50_test_70.json',
