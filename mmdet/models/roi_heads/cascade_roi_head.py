@@ -195,7 +195,8 @@ class CascadeRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
                       gt_bboxes,
                       gt_labels,
                       gt_bboxes_ignore=None,
-                      gt_masks=None):
+                      gt_masks=None,
+                      **kwargs):
         """
         Args:
             x (list[Tensor]): list of multi-level img features.
@@ -216,6 +217,7 @@ class CascadeRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
         Returns:
             dict[str, Tensor]: a dictionary of loss components
         """
+        scores = kwargs.pop('scores',None)
         losses = dict()
         for i in range(self.num_stages):
             self.current_stage = i
@@ -232,15 +234,17 @@ class CascadeRoIHead(BaseRoIHead, BBoxTestMixin, MaskTestMixin):
                     gt_bboxes_ignore = [None for _ in range(num_imgs)]
 
                 for j in range(num_imgs):
+                    _scores = scores[j] if scores is not None else None 
                     assign_result = bbox_assigner.assign(
                         proposal_list[j], gt_bboxes[j], gt_bboxes_ignore[j],
-                        gt_labels[j])
+                        gt_labels[j], scores = _scores)
                     sampling_result = bbox_sampler.sample(
                         assign_result,
                         proposal_list[j],
                         gt_bboxes[j],
                         gt_labels[j],
-                        feats=[lvl_feat[j][None] for lvl_feat in x])
+                        feats=[lvl_feat[j][None] for lvl_feat in x],
+                        scores = _scores)
                     sampling_results.append(sampling_result)
 
             # bbox head forward and loss

@@ -63,7 +63,7 @@ class MaxIoUAssigner(BaseAssigner):
         self.match_low_quality = match_low_quality
         self.iou_calculator = build_iou_calculator(iou_calculator)
 
-    def assign(self, bboxes, gt_bboxes, gt_bboxes_ignore=None, gt_labels=None):
+    def assign(self, bboxes, gt_bboxes, gt_bboxes_ignore=None, gt_labels=None,**kwargs):
         """Assign gt to bboxes.
 
         This method assign a gt bbox to every bbox (proposal/anchor), each bbox
@@ -122,7 +122,7 @@ class MaxIoUAssigner(BaseAssigner):
                 ignore_max_overlaps, _ = ignore_overlaps.max(dim=0)
             overlaps[:, ignore_max_overlaps > self.ignore_iof_thr] = -1
 
-        assign_result = self.assign_wrt_overlaps(overlaps, gt_labels)
+        assign_result = self.assign_wrt_overlaps(overlaps, gt_labels,**kwargs)
         if assign_on_cpu:
             assign_result.gt_inds = assign_result.gt_inds.to(device)
             assign_result.max_overlaps = assign_result.max_overlaps.to(device)
@@ -130,7 +130,7 @@ class MaxIoUAssigner(BaseAssigner):
                 assign_result.labels = assign_result.labels.to(device)
         return assign_result
 
-    def assign_wrt_overlaps(self, overlaps, gt_labels=None):
+    def assign_wrt_overlaps(self, overlaps, gt_labels=None,**kwargs):
         """Assign w.r.t. the overlaps of bboxes with gts.
 
         Args:
@@ -141,6 +141,7 @@ class MaxIoUAssigner(BaseAssigner):
         Returns:
             :obj:`AssignResult`: The assign result.
         """
+        scores = kwargs.pop('scores', None)
         num_gts, num_bboxes = overlaps.size(0), overlaps.size(1)
 
         # 1. assign -1 by default
@@ -216,5 +217,18 @@ class MaxIoUAssigner(BaseAssigner):
         else:
             assigned_labels = None
 
-        return AssignResult(
+        if scores is not None :
+            assigned_scores = assigned_gt_inds.new_full((num_bboxes, ), 1,dtype=torch.float32)
+            if pos_inds.numel() > 0:
+                assigned_scores[pos_inds] = scores[
+                    assigned_gt_inds[pos_inds] - 1]
+        else:
+            assigned_scores = None
+        
+        assigned_result = AssignResult(
             num_gts, assigned_gt_inds, max_overlaps, labels=assigned_labels)
+        
+        if assigned_scores is not None:
+            assigned_result.set_extra_property('assigned_scores',assigned_scores)
+        
+        return assigned_result

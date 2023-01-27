@@ -48,6 +48,9 @@ class SamplingResult(util_mixins.NiceRepr):
             self.pos_gt_labels = assign_result.labels[pos_inds]
         else:
             self.pos_gt_labels = None
+        
+        if 'assigned_scores' in assign_result._extra_properties: 
+            self.pos_gt_scores = assign_result._extra_properties['assigned_scores'][pos_inds]
 
     @property
     def bboxes(self):

@@ -120,7 +120,7 @@ class BBoxHead(BaseModule):
         return cls_score, bbox_pred
 
     def _get_target_single(self, pos_bboxes, neg_bboxes, pos_gt_bboxes,
-                           pos_gt_labels, cfg):
+                           pos_gt_labels, *args , cfg=None,):
         """Calculate the ground truth for proposals in the single image
         according to the sampling results.
 
@@ -167,6 +167,10 @@ class BBoxHead(BaseModule):
         bbox_targets = pos_bboxes.new_zeros(num_samples, 4)
         bbox_weights = pos_bboxes.new_zeros(num_samples, 4)
         if num_pos > 0:
+            # return scores
+            if len(args) > 0:
+                scores = pos_bboxes.new_ones(num_samples)
+                scores[:num_pos] = args[0]
             labels[:num_pos] = pos_gt_labels
             pos_weight = 1.0 if cfg.pos_weight <= 0 else cfg.pos_weight
             label_weights[:num_pos] = pos_weight
@@ -184,6 +188,8 @@ class BBoxHead(BaseModule):
         if num_neg > 0:
             label_weights[-num_neg:] = 1.0
 
+        if len(args) > 0:
+            return labels, label_weights, bbox_targets, bbox_weights,scores
         return labels, label_weights, bbox_targets, bbox_weights
 
     def get_targets(self,
@@ -235,41 +241,62 @@ class BBoxHead(BaseModule):
                   (num_proposals, 4) when `concat=False`, otherwise just a
                   single tensor has shape (num_all_proposals, 4).
         """
+        scores = []
         pos_bboxes_list = [res.pos_bboxes for res in sampling_results]
         neg_bboxes_list = [res.neg_bboxes for res in sampling_results]
         pos_gt_bboxes_list = [res.pos_gt_bboxes for res in sampling_results]
         pos_gt_labels_list = [res.pos_gt_labels for res in sampling_results]
-        labels, label_weights, bbox_targets, bbox_weights = multi_apply(
-            self._get_target_single,
-            pos_bboxes_list,
-            neg_bboxes_list,
-            pos_gt_bboxes_list,
-            pos_gt_labels_list,
-            cfg=rcnn_train_cfg)
-        if 'scores' in kwargs.keys():
-            score_labels = kwargs['scores']
-            scores = []
-            for i in range(len(sampling_results)):
-                score = torch.zeros([rcnn_train_cfg['sampler']['num'],self.num_classes+1])
-                score[:,-1] = 1.0
-                gt_inds = sampling_results[i].pos_assigned_gt_inds
-                cls_inds = sampling_results[i].pos_gt_labels
-                for j in range(gt_inds.shape[0]):
-                    score[j] = torch.zeros([self.num_classes+1])
-                    score[j][cls_inds[j]] = score_labels[i][gt_inds[j]]
-                    # score[j][cls_inds[j]] = 1.0
-                scores.append(score)
+        pos_gt_scores_list = [res.pos_gt_scores for res in sampling_results if hasattr(res,'pos_gt_scores')]
+        if len(pos_gt_scores_list) == 0:
+            labels, label_weights, bbox_targets, bbox_weights = multi_apply(
+                self._get_target_single,
+                pos_bboxes_list,
+                neg_bboxes_list,
+                pos_gt_bboxes_list,
+                pos_gt_labels_list,
+                cfg=rcnn_train_cfg
+                )
+        else:
+            labels, label_weights, bbox_targets, bbox_weights, scores = multi_apply(
+                self._get_target_single,
+                pos_bboxes_list,
+                neg_bboxes_list,
+                pos_gt_bboxes_list,
+                pos_gt_labels_list,
+                pos_gt_scores_list,
+                cfg = rcnn_train_cfg,
+                )
+        # if 'scores' in kwargs.keys():
+        #     score_labels = kwargs['scores']
+            # scores = []
+        #     for i in range(len(sampling_results)):
+        #         score = torch.zeros([sampling_results[i].bboxes.shape[0],self.num_classes+1])
+        #         score[:,-1] = 1.0
+        #         gt_inds = sampling_results[i].pos_assigned_gt_inds
+        #         cls_inds = sampling_results[i].pos_gt_labels
+        #         for idx in gt_inds:
+        #             score[idx] = torch.zeros([self.num_classes+1])
+        #             score[idx][cls_inds[j]] = score_labels[i][gt_inds[j]]
+        #             # score[j][cls_inds[j]] = 1.0
+        #         scores.append(score)
 
         if concat:
             labels = torch.cat(labels, 0)
             label_weights = torch.cat(label_weights, 0)
             bbox_targets = torch.cat(bbox_targets, 0)
             bbox_weights = torch.cat(bbox_weights, 0)
-            if 'scores' in kwargs.keys():
+            if len(scores) != 0:
                 scores = torch.cat(scores, 0)
-
-        if 'scores' in kwargs.keys():
-            return labels, label_weights, bbox_targets, bbox_weights,scores
+                scores_p = scores.new_zeros((scores.shape[0],self.num_classes+1))
+                scores_p = scores_p.scatter(1, labels.view((-1,1)) , 1)
+                scores_p[scores_p!=0] = scores
+                ls_scores = (1 - scores) / self.num_classes
+                ls_scores_p = scores.new_zeros((scores.shape[0],self.num_classes+1))
+                ls_scores_p += ls_scores.view((-1,1))
+                ls_scores_p = ls_scores_p.scatter(1, labels.view((-1,1)) , 0)
+                scores_p += ls_scores_p
+        if len(scores) != 0:
+            return labels, label_weights, bbox_targets, bbox_weights,scores_p
         else:
             return labels, label_weights, bbox_targets, bbox_weights,
 
@@ -282,20 +309,22 @@ class BBoxHead(BaseModule):
              label_weights,
              bbox_targets,
              bbox_weights,
+             *args,
              reduction_override=None,
              **kwargs):
         losses = dict()
         if cls_score is not None:
             avg_factor = max(torch.sum(label_weights > 0).float().item(), 1.)
             if cls_score.numel() > 0:
-                if 'scores' in kwargs.keys():
+                if len(args) != 0:
+                    scores = args[0]
                     loss_cls_ = self.loss_cls(
                         cls_score,
                         labels,
                         label_weights,
                         avg_factor=avg_factor,
                         reduction_override=reduction_override,
-                        scores=kwargs['scores'])
+                        scores=scores)
                 else:
                     loss_cls_ = self.loss_cls(
                         cls_score,

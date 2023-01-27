@@ -189,7 +189,7 @@ class AssignResult(util_mixins.NiceRepr):
         self = cls(num_gts, gt_inds, max_overlaps, labels)
         return self
 
-    def add_gt_(self, gt_labels):
+    def add_gt_(self, gt_labels, **kwargs):
         """Add ground truth as assigned results.
 
         Args:
@@ -204,3 +204,9 @@ class AssignResult(util_mixins.NiceRepr):
 
         if self.labels is not None:
             self.labels = torch.cat([gt_labels, self.labels])
+
+        scores = kwargs.get('scores', None)
+        if self._extra_properties.get('assigned_scores',
+                                      None) is not None and scores is not None:
+            self._extra_properties['assigned_scores'] = torch.cat(
+                [scores, self._extra_properties['assigned_scores']])
