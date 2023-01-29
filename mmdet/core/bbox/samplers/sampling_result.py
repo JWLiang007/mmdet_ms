@@ -49,6 +49,8 @@ class SamplingResult(util_mixins.NiceRepr):
         else:
             self.pos_gt_labels = None
         
+        self.pos_overlap = assign_result.max_overlaps[pos_inds]
+        self.neg_overlap = assign_result.max_overlaps[neg_inds]
         if 'assigned_scores' in assign_result._extra_properties: 
             self.pos_gt_scores = assign_result._extra_properties['assigned_scores'][pos_inds]
 

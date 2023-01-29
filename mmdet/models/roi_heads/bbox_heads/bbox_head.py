@@ -172,7 +172,10 @@ class BBoxHead(BaseModule):
                 scores = pos_bboxes.new_ones(num_samples)
                 scores[:num_pos] = args[0]
             labels[:num_pos] = pos_gt_labels
-            pos_weight = 1.0 if cfg.pos_weight <= 0 else cfg.pos_weight
+            if len(args) > 1:
+                pos_weight = torch.exp(args[1])  
+            else:
+                pos_weight = 1.0 if cfg.pos_weight <= 0 else  cfg.pos_weight
             label_weights[:num_pos] = pos_weight
             if not self.reg_decoded_bbox:
                 pos_bbox_targets = self.bbox_coder.encode(
@@ -247,6 +250,7 @@ class BBoxHead(BaseModule):
         pos_gt_bboxes_list = [res.pos_gt_bboxes for res in sampling_results]
         pos_gt_labels_list = [res.pos_gt_labels for res in sampling_results]
         pos_gt_scores_list = [res.pos_gt_scores for res in sampling_results if hasattr(res,'pos_gt_scores')]
+        pos_overlaps_list = [res.pos_overlap for res in sampling_results]
         if len(pos_gt_scores_list) == 0:
             labels, label_weights, bbox_targets, bbox_weights = multi_apply(
                 self._get_target_single,
@@ -264,6 +268,7 @@ class BBoxHead(BaseModule):
                 pos_gt_bboxes_list,
                 pos_gt_labels_list,
                 pos_gt_scores_list,
+                pos_overlaps_list,
                 cfg = rcnn_train_cfg,
                 )
         # if 'scores' in kwargs.keys():
