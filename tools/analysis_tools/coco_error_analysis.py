@@ -23,7 +23,7 @@ def makeplot(rs, ps, outDir, class_name, iou_type):
     types = ['C75', 'C50', 'Loc', 'Sim', 'Oth', 'BG', 'FN']
     for i in range(len(areaNames)):
         area_ps = ps[..., i, 0]
-        figure_title = iou_type + '-' + class_name + '-' + areaNames[i]
+        figure_title = iou_type + '-' + class_name.replace('/','_') + '-' + areaNames[i]
         aps = [ps_.mean() for ps_ in area_ps]
         ps_curve = [
             ps_.mean(axis=1) if ps_.ndim > 1 else ps_ for ps_ in area_ps
@@ -77,7 +77,7 @@ def makebarplot(rs, ps, outDir, class_name, iou_type):
     x = np.arange(len(areaNames))  # the areaNames locations
     width = 0.60  # the width of the bars
     rects_list = []
-    figure_title = iou_type + '-' + class_name + '-' + 'ap bar plot'
+    figure_title = iou_type + '-' + class_name.replace('/','_')  + '-' + 'ap bar plot'
     for i in range(len(types) - 1):
         type_ps = ps[i, ..., 0]
         aps = [ps_.mean() for ps_ in type_ps.T]
@@ -192,12 +192,13 @@ def analyze_individual_category(k,
     dt.createIndex()
     # compute precision but ignore superclass confusion
     gt = copy.deepcopy(cocoGt)
-    child_catIds = gt.getCatIds(supNms=[nm['supercategory']])
-    for idx, ann in enumerate(gt.dataset['annotations']):
-        if ann['category_id'] in child_catIds and ann['category_id'] != catId:
-            gt.dataset['annotations'][idx]['ignore'] = 1
-            gt.dataset['annotations'][idx]['iscrowd'] = 1
-            gt.dataset['annotations'][idx]['category_id'] = catId
+    if 'supercategory' in nm:
+        child_catIds = gt.getCatIds(supNms=[nm['supercategory']])
+        for idx, ann in enumerate(gt.dataset['annotations']):
+            if ann['category_id'] in child_catIds and ann['category_id'] != catId:
+                gt.dataset['annotations'][idx]['ignore'] = 1
+                gt.dataset['annotations'][idx]['iscrowd'] = 1
+                gt.dataset['annotations'][idx]['category_id'] = catId
     cocoEval = COCOeval(gt, copy.deepcopy(dt), iou_type)
     cocoEval.params.imgIds = imgIds
     cocoEval.params.maxDets = [100]
