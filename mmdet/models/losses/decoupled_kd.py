@@ -35,7 +35,8 @@ class DKDLoss(nn.Module):
         tau: float = 1.0,
         alpha: float = 1.0,
         beta: float = 1.0,
-        reduction: str = 'batchmean',
+        # reduction: str = 'batchmean',
+        reduction: str = 'none',
         loss_weight: float = 1.0,
     ) -> None:
         super(DKDLoss, self).__init__()
@@ -57,7 +58,7 @@ class DKDLoss(nn.Module):
         avg_factor=None,
         reduction_override=None,
         ignore_index=None,
-        scores = None ,
+        scores=None,
     ) -> torch.Tensor:
         """DKDLoss forward function.
 
@@ -69,36 +70,35 @@ class DKDLoss(nn.Module):
         Return:
             torch.Tensor: The calculated loss value.
         """
-        assert scores is not None 
+        assert scores is not None
         preds_T = scores
         # if len(gt_labels.shape)  == 1 :
         #     _gt_labels = preds_S.new_zeros(preds_S.shape,dtype=torch.long)
         #     gt_labels = _gt_labels.scatter_(1, gt_labels.view(-1,1), 1 )
         gt_mask = self._get_gt_mask(preds_S, gt_labels)
-        tckd_loss = self._get_tckd_loss(preds_S, preds_T, gt_labels, gt_mask)
-        nckd_loss = self._get_nckd_loss(preds_S, preds_T, gt_mask)
+        tckd_loss = self._get_tckd_loss(preds_S, preds_T, gt_labels, gt_mask,
+                                        weight)
+        nckd_loss = self._get_nckd_loss(preds_S, preds_T, gt_mask, weight)
         loss = self.alpha * tckd_loss + self.beta * nckd_loss
         return self.loss_weight * loss
 
-    def _get_nckd_loss(
-        self,
-        preds_S: torch.Tensor,
-        preds_T: torch.Tensor,
-        gt_mask: torch.Tensor,
-    ) -> torch.Tensor:
+    def _get_nckd_loss(self,
+                       preds_S: torch.Tensor,
+                       preds_T: torch.Tensor,
+                       gt_mask: torch.Tensor,
+                       weight=None) -> torch.Tensor:
         """Calculate non-target class knowledge distillation."""
         # implementation to mask out gt_mask, faster than index
         s_nckd = F.log_softmax(preds_S / self.tau - 1000.0 * gt_mask, dim=1)
         t_nckd = F.softmax(preds_T / self.tau - 1000.0 * gt_mask, dim=1)
-        return self._kl_loss(s_nckd, t_nckd)
+        return self._kl_loss(s_nckd, t_nckd, weight)
 
-    def _get_tckd_loss(
-        self,
-        preds_S: torch.Tensor,
-        preds_T: torch.Tensor,
-        gt_labels: torch.Tensor,
-        gt_mask: torch.Tensor,
-    ) -> torch.Tensor:
+    def _get_tckd_loss(self,
+                       preds_S: torch.Tensor,
+                       preds_T: torch.Tensor,
+                       gt_labels: torch.Tensor,
+                       gt_mask: torch.Tensor,
+                       weight=None) -> torch.Tensor:
         """Calculate target class knowledge distillation."""
         non_gt_mask = self._get_non_gt_mask(preds_S, gt_labels)
         s_tckd = F.softmax(preds_S / self.tau, dim=1)
@@ -106,17 +106,24 @@ class DKDLoss(nn.Module):
         # t_tckd = F.softmax(preds_T / self.tau, dim=1)
         mask_student = torch.log(self._cat_mask(s_tckd, gt_mask, non_gt_mask))
         mask_teacher = self._cat_mask(t_tckd, gt_mask, non_gt_mask)
-        return self._kl_loss(mask_student, mask_teacher)
+        return self._kl_loss(mask_student, mask_teacher, weight)
 
-    def _kl_loss(
-        self,
-        preds_S: torch.Tensor,
-        preds_T: torch.Tensor,
-    ) -> torch.Tensor:
+    def _kl_loss(self,
+                 preds_S: torch.Tensor,
+                 preds_T: torch.Tensor,
+                 weight=None) -> torch.Tensor:
+        if weight is None:
+            weight = preds_S.new_ones((preds_S.shape[0], 1))
+        if len(weight.shape) == 1:
+            weight = weight.unsqueeze(1)
         """Calculate the KL Divergence."""
-        kl_loss = F.kl_div(
-            preds_S, preds_T, size_average=False,
-            reduction=self.reduction) * self.tau**2
+        kl_loss = torch.sum(
+            F.kl_div(
+                preds_S,
+                preds_T,
+                # size_average=False,
+                reduction=self.reduction) * weight * self.tau**2 /
+            preds_S.shape[0])
         return kl_loss
 
     def _cat_mask(
