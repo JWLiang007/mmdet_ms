@@ -38,6 +38,7 @@ class DKDLoss(nn.Module):
         # reduction: str = 'batchmean',
         reduction: str = 'none',
         loss_weight: float = 1.0,
+        **kwargs
     ) -> None:
         super(DKDLoss, self).__init__()
         self.tau = tau

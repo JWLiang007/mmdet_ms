@@ -250,7 +250,10 @@ class BBoxHead(BaseModule):
         pos_gt_bboxes_list = [res.pos_gt_bboxes for res in sampling_results]
         pos_gt_labels_list = [res.pos_gt_labels for res in sampling_results]
         pos_gt_scores_list = [res.pos_gt_scores for res in sampling_results if hasattr(res,'pos_gt_scores')]
-        pos_overlaps_list = [res.pos_overlap for res in sampling_results]
+        addi_args = [pos_gt_scores_list]
+        if 'overlap_as_weight' in rcnn_train_cfg and rcnn_train_cfg['overlap_as_weight'] :
+            pos_overlaps_list = [res.pos_overlap for res in sampling_results]
+            addi_args.append(pos_overlaps_list)
         if len(pos_gt_scores_list) == 0:
             labels, label_weights, bbox_targets, bbox_weights = multi_apply(
                 self._get_target_single,
@@ -267,8 +270,7 @@ class BBoxHead(BaseModule):
                 neg_bboxes_list,
                 pos_gt_bboxes_list,
                 pos_gt_labels_list,
-                pos_gt_scores_list,
-                pos_overlaps_list,
+                *addi_args,
                 cfg = rcnn_train_cfg,
                 )
         # if 'scores' in kwargs.keys():
